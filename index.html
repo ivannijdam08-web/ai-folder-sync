@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Folder Sync — Work locally in your project folder with any AI assistant</title>
+  <!-- Main Stylesheet (Relative path for GitHub Pages compatibility) -->
+  <link id="coreStyles" rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ===================================================================== -->
+  <!-- === NAVIGATION BAR === -->
+  <!-- ===================================================================== -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="#" id="brandLink" class="brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          <path d="m10 13-2 2 2 2"></path>
+          <path d="m14 13 2 2-2 2"></path>
+        </svg>
+        <span>AI Folder Sync</span>
+      </a>
+
+      <!-- View Switcher Tabs -->
+      <div class="nav-view-tabs" role="tablist">
+        <button type="button" class="view-tab-btn active" data-switch-view="workspace">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+          </svg>
+          <span data-i18n="nav_tab_workspace">Tool / Workspace</span>
+        </button>
+        <button type="button" class="view-tab-btn" data-switch-view="home">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+          </svg>
+          <span data-i18n="nav_tab_home">How It Works</span>
+        </button>
+      </div>
+
+      <!-- Language Switcher & GitHub Repository Link -->
+      <div class="nav-actions">
+        <div id="mainLangSwitch" class="lang-switch" data-active-lang="en" role="group" aria-label="Language switcher">
+          <span class="lang-slider" aria-hidden="true"></span>
+          <button type="button" class="lang-btn active" data-lang-switch="en">EN</button>
+          <button type="button" class="lang-btn" data-lang-switch="nl">NL</button>
+        </div>
+        <a href="https://github.com/ivannijdam08-web/ai-folder-sync" target="_blank" rel="noopener" class="nav-btn">
+          <span>GitHub</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M7 17L17 7"></path>
+            <path d="M7 7h10v10"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- === TOAST NOTIFICATION CONTAINER === -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- ===================================================================== -->
+  <!-- === VIEW 1: WORKSPACE === -->
+  <!-- ===================================================================== -->
+  <main id="viewWorkspace" class="page-view active lang-transition-target">
+    <div class="container">
+      <section class="workspace-shell">
+
+        <div class="workspace-header-bar">
+          <div>
+            <h2 data-i18n="ws_page_title">Local Project Workspace</h2>
+            <p data-i18n="ws_page_subtitle">Link your folder, copy your prompt to any AI assistant, and apply JSON updates directly.</p>
+          </div>
+          <button type="button" class="btn btn-outline btn-xs" data-switch-view="home">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <span data-i18n="ws_how_link">How does it work?</span>
+          </button>
+        </div>
+
+        <!-- Placeholder shown in main tab while workspace floats in Picture-in-Picture -->
+        <div id="pipPlaceholder" class="pip-active-placeholder">
+          <div class="pip-ph-icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <rect x="13" y="3" width="8" height="7" rx="1"></rect>
+            </svg>
+          </div>
+          <h3 style="font-size:1.18rem; margin-bottom:8px;" data-i18n="pip_ph_title">Your workspace is now floating on top of your screen</h3>
+          <p style="color:var(--text-muted); max-width:540px; margin:0 auto 18px; font-size:0.86rem;" data-i18n-html="pip_ph_desc">
+            Switch to your <strong>AI assistant</strong> tab (ChatGPT, Claude, Gemini, etc.). The floating window stays visible <strong>on top of your chat</strong>.
+          </p>
+          <button type="button" id="closePipPlaceholderBtn" class="btn btn-danger btn-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            <span data-i18n="pip_ph_close">Close floating window &amp; restore</span>
+          </button>
+        </div>
+
+        <div id="workspaceHolder">
+          <div id="workspacePanel" class="workspace-panel">
+
+            <!-- FLOATING PIP HEADER -->
+            <div class="pip-FloatingHeader">
+              <div class="pip-status-left">
+                <span id="pipConnDot" class="status-dot"></span>
+                <span id="pipConnName" class="pip-folder-name">No folder linked</span>
+              </div>
+              <button type="button" id="closePipFloatingBtn" class="btn btn-danger btn-xs">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                <span data-i18n="pip_hdr_close">Close</span>
+              </button>
+            </div>
+
+            <!-- WORKSPACE TOPBAR -->
+            <div class="workspace-topbar">
+              <div class="topbar-zone-left">
+                <div class="topbar-status-cluster">
+                  <div class="folder-status-badge">
+                    <span id="connDot" class="status-dot"></span>
+                    <span id="connLabel">No folder linked</span>
+                  </div>
+                  <span id="autoSyncBadge" class="auto-sync-pill" data-i18n-title="title_auto_sync" title="Automatically watches for external file edits in your code editor or file explorer">
+                    <span class="pulse-dot"></span>
+                    <span data-i18n="badge_auto_sync">Auto-Sync</span>
+                  </span>
+                </div>
+
+                <div id="topbarDivider" class="topbar-divider"></div>
+
+                <div id="folderCtrlBtns" class="folder-ctrl-group">
+                  <button type="button" id="refreshFolderBtn" class="btn-seg" data-i18n-title="title_refresh">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M21 2v6h-6"></path>
+                      <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+                      <path d="M3 22v-6h6"></path>
+                      <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                    </svg>
+                    <span data-i18n="btn_refresh">Refresh</span>
+                  </button>
+                  <button type="button" id="switchFolderBtn" class="btn-seg" data-i18n-title="title_switch_folder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span data-i18n="btn_switch_folder">Switch folder</span>
+                  </button>
+                  <button type="button" id="disconnectFolderBtn" class="btn-seg seg-danger" data-i18n-title="title_close_folder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                    <span data-i18n="btn_close_folder">Close folder</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="topbar-zone-right">
+                <button type="button" id="copySysPromptBtn" class="btn btn-outline btn-sm" data-i18n-title="title_sys_prompt">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  <span data-i18n="btn_sys_prompt">Copy system instruction</span>
+                </button>
+                <button type="button" id="togglePipBtn" class="btn btn-sync btn-sm hide-in-pip" data-i18n-title="title_floating">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <rect x="13" y="3" width="8" height="7" rx="1"></rect>
+                  </svg>
+                  <span data-i18n="btn_floating">Open floating panel</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- =========================================================== -->
+            <!-- === 2-COLUMN WORKSPACE GRID === -->
+            <!-- =========================================================== -->
+            <div id="toolGrid" class="workspace-layout unlinked-mode">
+
+              <!-- LEFT COLUMN: STEP 1 (PROJECT FOLDER & FILE EXPLORER) -->
+              <div id="step1Box" class="tool-box">
+                <div class="step-header">
+                  <div class="step-header-main">
+                    <div class="step-title-group">
+                      <span class="step-num">1</span>
+                      <h3 data-i18n="step1_title">Project Folder &amp; Files</h3>
+                    </div>
+                    <p class="step-subtitle" data-i18n="step1_subtitle">Link your local folder and select your files.</p>
+                  </div>
+                </div>
+
+                <!-- 1-Click Reconnect Box -->
+                <div id="reconnectBox" class="reconnect-box">
+                  <span id="reconnectText">Last opened folder is ready:</span>
+                  <button type="button" id="reconnectBtn" class="btn btn-update btn-sm btn-full">
+                    Reopen folder (1 click)
+                  </button>
+                </div>
+
+                <!-- Empty State when no folder is linked -->
+                <div id="folderEmptyState" class="folder-EmptyState">
+                  <div class="empty-folder-icon" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                  </div>
+                  <p data-i18n="step1_empty_desc">Select an existing project folder or an empty folder for a new project to get started.</p>
+                  <button type="button" id="selectFolderBtn" class="btn btn-folder-select btn-full">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                      <line x1="12" y1="11" x2="12" y2="17"></line>
+                      <line x1="9" y1="14" x2="15" y2="14"></line>
+                    </svg>
+                    <span data-i18n="btn_choose_folder">Choose project folder</span>
+                  </button>
+                </div>
+
+                <!-- Hierarchical File Explorer -->
+                <div id="fileTreeWrap" class="file-tree-wrap">
+                  <div class="folder-overview-card">
+                    <div class="overview-top">
+                      <div class="overview-folder-badge">
+                        <span class="overview-folder-icon" aria-hidden="true">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                          </svg>
+                        </span>
+                        <span id="overviewFolderName" class="overview-folder-name">project</span>
+                      </div>
+                      <span id="treeSummaryText" class="overview-size-pill">0 B</span>
+                    </div>
+
+                    <div class="overview-stats-grid">
+                      <div class="stat-chip">
+                        <span id="statFilesVal" class="stat-val">0</span>
+                        <span class="stat-lbl" data-i18n="stat_files">Files</span>
+                      </div>
+                      <div class="stat-chip">
+                        <span id="statFoldersVal" class="stat-val">0</span>
+                        <span class="stat-lbl" data-i18n="stat_folders">Folders</span>
+                      </div>
+                      <div class="stat-chip">
+                        <span id="statLinesVal" class="stat-val">0</span>
+                        <span class="stat-lbl" data-i18n="stat_lines">Lines</span>
+                      </div>
+                    </div>
+
+                    <div id="pipFolderCtrlRow" class="pip-step1-actions">
+                      <button type="button" id="pipRefreshBtn" class="btn btn-xs" data-i18n="btn_refresh">Refresh</button>
+                      <button type="button" id="pipSwitchFolderBtn" class="btn btn-xs" data-i18n="btn_switch_folder">Switch folder</button>
+                      <button type="button" id="pipDisconnectBtn" class="btn btn-danger btn-xs" data-i18n="btn_close_folder">Close folder</button>
+                    </div>
+
+                    <button type="button" id="toggleFileDrawerBtn" class="collapse-files-btn">
+                      <span id="toggleFileDrawerText">Hide file list</span>
+                      <svg class="collapse-chevron-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div id="fileExplorerDrawer" class="file-explorer-drawer">
+                    <div class="file-tree-header">
+                      <span id="selectedFilesCountText" style="color:var(--text-secondary); font-weight:500;">Selected: 0 / 0</span>
+                      <div id="treeActionBtns" class="tree-actions">
+                        <button type="button" id="selectAllFilesBtn" data-i18n="btn_all_on">Select all</button>
+                        <button type="button" id="deselectAllFilesBtn" data-i18n="btn_all_off">Deselect all</button>
+                      </div>
+                    </div>
+                    <div id="fileSelectorBox" class="file-list"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- RIGHT COLUMN: STEP 2 & STEP 3 STACKED -->
+              <div class="workspace-col-right requires-folder">
+
+                <!-- ======================================================= -->
+                <!-- STEP 2: PROMPT, AI OUTPUT LIMIT & COPY/SYNC OPTIONS -->
+                <!-- ======================================================= -->
+                <div id="step2Box" class="tool-box">
+                  <div class="step-header">
+                    <div class="step-header-main">
+                      <div class="step-title-group">
+                        <span class="step-num">2</span>
+                        <h3 data-i18n="step2_title">Prompt &amp; Copy</h3>
+                      </div>
+                      <p class="step-subtitle" data-i18n="step2_subtitle">Write your task and choose the right copy action for your AI chat below.</p>
+                    </div>
+
+                    <div class="output-limit-group">
+                      <span id="outputLimitIcon" class="output-limit-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="4" y1="21" x2="4" y2="14"></line>
+                          <line x1="4" y1="10" x2="4" y2="3"></line>
+                          <line x1="12" y1="21" x2="12" y2="12"></line>
+                          <line x1="12" y1="8" x2="12" y2="3"></line>
+                          <line x1="20" y1="21" x2="20" y2="16"></line>
+                          <line x1="20" y1="12" x2="20" y2="3"></line>
+                          <line x1="1" y1="14" x2="7" y2="14"></line>
+                          <line x1="9" y1="8" x2="15" y2="8"></line>
+                          <line x1="17" y1="16" x2="23" y2="16"></line>
+                        </svg>
+                      </span>
+                      <label for="outputLimitSelect" class="output-limit-label" data-i18n="lbl_output_limit">
+                        AI Output Limit:
+                      </label>
+                      <select id="outputLimitSelect" class="output-limit-select" data-i18n-title="title_output_limit">
+                        <option value="safe" data-i18n="opt_limit_safe">Safe / Free AI (Max ~350 lines at once)</option>
+                        <option value="standard" selected data-i18n="opt_limit_standard">Standard (Max ~700 lines at once - Recommended)</option>
+                        <option value="high" data-i18n="opt_limit_high">High / Powerful AI (Max ~2,000 lines at once)</option>
+                        <option value="unlimited" data-i18n="opt_limit_unlimited">No limit (Everything at once)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Prompt Textarea -->
+                  <div class="prompt-input-wrap">
+                    <button type="button" id="clearPromptBtn" class="prompt-clear-btn" data-i18n-title="title_clear_prompt">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                      <span data-i18n="btn_clear_prompt">Clear</span>
+                    </button>
+                    <textarea id="userPromptInput" class="prompt-input" data-i18n-placeholder="step2_placeholder" placeholder="Describe what you want your AI assistant to build or modify..."></textarea>
+                  </div>
+
+                  <!-- Side-by-Side 2-Column Grid for Copy & Sync Actions -->
+                  <div class="copy-actions-grid">
+
+                    <!-- Card A: Start of a New Chat -->
+                    <div class="copy-mode-card">
+                      <div class="copy-mode-top">
+                        <div class="copy-mode-header">
+                          <span class="copy-mode-title" data-i18n="subcard_new_chat">1. Start new chat</span>
+                        </div>
+                        <p class="copy-mode-desc" data-i18n="explain_copy_project">
+                          Sends the folder structure, all checked files, and your prompt.
+                        </p>
+                      </div>
+
+                      <div class="copy-mode-bottom">
+                        <div class="new-chat-btn-row">
+                          <button type="button" id="copyProjectBtn" class="btn btn-primary btn-full">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            <span data-i18n="btn_copy_project">Full project + prompt</span>
+                          </button>
+                          <button type="button" id="downloadTxtBtn" class="btn btn-outline btn-icon-only hide-in-pip" data-i18n-title="title_download_txt" title="Download full project + prompt as a .txt file">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                              <polyline points="7 10 12 15 17 10"></polyline>
+                              <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>.txt</span>
+                          </button>
+                        </div>
+
+                        <div class="copy-mode-footer">
+                          <label class="auto-prompt-toggle" data-i18n-title="title_include_sys" title="Automatically include the AI system instruction when copying the full project">
+                            <input type="checkbox" id="includePromptChk" checked>
+                            <span data-i18n="chk_include_sys">Include system instruction</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Card B: Ongoing Chat -->
+                    <div id="ongoingChatCard" class="copy-mode-card">
+                      <div class="copy-mode-top">
+                        <div class="copy-mode-header">
+                          <span class="copy-mode-title" data-i18n="ongoing_divider_lbl">2. Ongoing chat</span>
+                          <span id="deltaSyncBanner" class="delta-status-pill">
+                            <span id="deltaCountBadge" class="delta-status-count">0</span>
+                            <span id="deltaSyncText" data-i18n="delta_pill_clean">changed</span>
+                          </span>
+                        </div>
+                        <p class="copy-mode-desc" data-i18n="explain_copy_delta">
+                          Sync only locally modified/renamed files or copy just your prompt text.
+                        </p>
+                      </div>
+
+                      <div class="copy-mode-bottom">
+                        <div class="ongoing-chat-btn-row">
+                          <button type="button" id="copyDeltaSyncBtn" class="btn btn-sync btn-full" data-i18n-title="title_copy_delta">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                              <path d="M21 2v6h-6"></path>
+                              <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+                              <path d="M3 22v-6h6"></path>
+                              <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                            </svg>
+                            <span data-i18n="btn_copy_delta">Sync + prompt</span>
+                            <span id="syncBtnBadge" class="sync-btn-badge">0</span>
+                          </button>
+
+                          <button type="button" id="copyFollowUpBtn" class="btn btn-outline btn-full" data-i18n-title="title_followup">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <span data-i18n="btn_followup">Prompt only</span>
+                          </button>
+                        </div>
+
+                        <div class="copy-mode-footer">
+                          <span id="deltaFooterNote" class="sync-footer-note">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <span>All files are in sync with the AI</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                <!-- ======================================================= -->
+                <!-- STEP 3: UPDATE FOLDER, VERSION HISTORY & RECOVERY -->
+                <!-- ======================================================= -->
+                <div id="step3Box" class="tool-box">
+                  <div class="step-header">
+                    <div class="step-header-main">
+                      <div class="step-title-group">
+                        <span class="step-num step-3">3</span>
+                        <h3 data-i18n="step3_title">Update Folder</h3>
+                      </div>
+                      <p class="step-subtitle" data-i18n="step3_subtitle">Copy the JSON code block from the AI response and apply all changes to your disk with 1 click.</p>
+                    </div>
+                  </div>
+
+                  <!-- Primary Update Actions -->
+                  <div class="step3-action-bar">
+                    <button type="button" id="updateClipboardBtn" class="btn btn-update btn-full">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                        <path d="m9 14 2 2 4-4"></path>
+                      </svg>
+                      <span data-i18n="btn_update_clip">Read clipboard &amp; update folder</span>
+                    </button>
+
+                    <button type="button" id="toggleManualPasteBtn" class="btn btn-outline btn-full" aria-expanded="false">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="16 18 22 12 16 6"></polyline>
+                        <polyline points="8 6 2 12 8 18"></polyline>
+                      </svg>
+                      <span data-i18n="manual_json_summary">Paste JSON manually</span>
+                      <svg class="btn-chevron-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <!-- Undo Last Update & Version History Bar -->
+                  <div class="step3-history-bar">
+                    <button type="button" id="undoLastUpdateBtn" class="btn btn-undo btn-sm btn-full" data-i18n-title="title_undo_last" disabled>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 7v6h6"></path>
+                        <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
+                      </svg>
+                      <span data-i18n="btn_undo_last">Undo last update</span>
+                    </button>
+
+                    <button type="button" id="toggleVersionHistoryBtn" class="btn btn-outline btn-sm btn-full" data-i18n-title="title_version_history" aria-expanded="false">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                      </svg>
+                      <span data-i18n="btn_version_history">Version History</span>
+                      <span id="versionCountBadge" class="version-count-badge">0</span>
+                      <svg class="btn-chevron-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <!-- Live Progress Bar -->
+                  <div id="updateProgressBox" class="update-progress-box">
+                    <div class="progress-top-row">
+                      <span id="progressStatusText">Updating... 0 / 0</span>
+                      <span id="progressPercentText" class="progress-percent-badge">0%</span>
+                    </div>
+                    <div class="progress-track">
+                      <div id="progressBarFill" class="progress-bar-fill"></div>
+                    </div>
+                    <div id="progressCurrentFile" class="progress-current-file">-</div>
+                  </div>
+
+                  <!-- Automatic "Cut-off JSON" Detector & Recovery Button -->
+                  <div id="truncatedJsonBox" class="truncated-json-box">
+                    <div class="truncated-json-title">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                      </svg>
+                      <span data-i18n="trunc_box_title">Warning: The AI's response appears to have been cut off halfway!</span>
+                    </div>
+                    <p class="truncated-json-desc" data-i18n="trunc_box_desc">
+                      The JSON block on your clipboard is not validly closed because the AI stopped halfway through a file due to the output limit. Click below to copy the continue prompt (Part 2):
+                    </p>
+                    <button type="button" id="copyContinueJsonBtn" class="btn btn-danger btn-sm btn-full">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                      </svg>
+                      <span data-i18n="btn_copy_continue_json">Copy 'Continue (Part 2)' Prompt</span>
+                    </button>
+                  </div>
+
+                  <!-- Collapsible Version History Panel -->
+                  <div id="versionHistoryPanel" class="version-history-panel">
+                    <div class="version-history-header">
+                      <span class="version-history-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span data-i18n="vh_panel_title">Saved Versions</span>
+                      </span>
+                      <span class="version-history-subtitle" data-i18n="vh_panel_subtitle">All versions are kept — switch back and forth freely</span>
+                    </div>
+                    <div id="versionHistoryList" class="version-history-list"></div>
+                  </div>
+
+                  <!-- Collapsible Manual JSON Paste Panel -->
+                  <div id="manualPastePanel" class="manual-paste-panel">
+                    <div class="manual-paste-header">
+                      <span data-i18n="manual_json_label">Manual JSON Code Block</span>
+                    </div>
+                    <textarea id="aiPatchInput" class="code-input" data-i18n-placeholder="manual_json_placeholder" placeholder="Paste the JSON block from your AI assistant here..."></textarea>
+                    <button type="button" id="manualUpdateBtn" class="btn btn-update btn-sm btn-full">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                      <span data-i18n="btn_manual_update">Run manual update</span>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- =============================================================== -->
+            <!-- === DISCONNECT FOLDER CONFIRMATION MODAL === -->
+            <!-- =============================================================== -->
+            <div id="disconnectConfirmModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="disconnectModalTitle">
+              <div class="modal-card">
+                <div class="modal-header">
+                  <h3 id="disconnectModalTitle">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                      <line x1="12" y1="9" x2="12" y2="13"></line>
+                      <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <span data-i18n="disc_modal_title">Close project folder?</span>
+                  </h3>
+                  <button type="button" id="closeDisconnectModalXBtn" class="btn btn-outline btn-xs" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <p id="disconnectModalIntro" style="font-size:0.84rem; color:var(--text-main);"></p>
+                  <ul class="confirm-warning-list">
+                    <li>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="m18.84 12.25 1.72-1.71h-.02a5.004 5.004 0 0 0-.12-7.07 5.006 5.006 0 0 0-6.95 0l-1.72 1.71"></path>
+                        <path d="m5.17 11.75-1.71 1.71a5.004 5.004 0 0 0 .12 7.07 5.006 5.006 0 0 0 6.95 0l1.71-1.71"></path>
+                        <line x1="8" y1="2" x2="8" y2="5"></line>
+                        <line x1="2" y1="8" x2="5" y2="8"></line>
+                        <line x1="16" y1="19" x2="16" y2="22"></line>
+                        <line x1="19" y1="16" x2="22" y2="16"></line>
+                      </svg>
+                      <div data-i18n-html="disc_point_1">
+                        <strong>Folder link is disconnected:</strong> The active connection between this browser tool and your project folder will be closed.
+                      </div>
+                    </li>
+                    <li>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        <path d="m9 12 2 2 4-4"></path>
+                      </svg>
+                      <div data-i18n-html="disc_point_2">
+                        <strong>Your local files remain 100% safe:</strong> Your actual files and source code on your hard drive remain completely untouched.
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" id="confirmDisconnectModalBtn" class="btn btn-danger btn-sm" data-i18n="btn_confirm_disconnect">
+                    Yes, close project folder
+                  </button>
+                  <button type="button" id="cancelDisconnectModalBtn" class="btn btn-outline btn-sm" data-i18n="btn_cancel_disconnect">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- === VIEW 2: HOME & HOW IT WORKS === -->
+  <!-- ===================================================================== -->
+  <main id="viewHome" class="page-view lang-transition-target">
+    <div class="container">
+      <header class="hero">
+        <div class="hero-pills">
+          <span class="pill green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              <path d="m9 12 2 2 4-4"></path>
+            </svg>
+            <span data-i18n="hero_pill_1">100% Local &amp; Private</span>
+          </span>
+          <span class="pill purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+              <rect x="9" y="9" width="6" height="6"></rect>
+              <line x1="9" y1="1" x2="9" y2="4"></line>
+              <line x1="15" y1="1" x2="15" y2="4"></line>
+              <line x1="9" y1="20" x2="9" y2="23"></line>
+              <line x1="15" y1="20" x2="15" y2="23"></line>
+              <line x1="20" y1="9" x2="23" y2="9"></line>
+              <line x1="20" y1="14" x2="23" y2="14"></line>
+              <line x1="1" y1="9" x2="4" y2="9"></line>
+              <line x1="1" y1="14" x2="4" y2="14"></line>
+            </svg>
+            <span data-i18n="hero_pill_2">Works with Any AI Assistant</span>
+          </span>
+          <span class="pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span data-i18n="hero_pill_3">Smart JSON Diffs &amp; Backups</span>
+          </span>
+        </div>
+        <h1 data-i18n="hero_title">Build and edit local projects directly with any AI assistant</h1>
+        <p data-i18n="hero_subtitle">Link your project folder, paste your prompt into ChatGPT, Claude, Gemini, or any other AI, and apply all file creations, edits, and deletions to your hard drive with 1 click.</p>
+        <div class="hero-cta-row">
+          <button type="button" class="btn btn-primary" data-switch-view="workspace">
+            <span data-i18n="hero_cta_open_tool">Open Tool / Workspace</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+          <button type="button" id="scrollToGuideBtn" class="btn btn-outline" data-i18n="hero_cta_read_guide">
+            Read Step-by-Step Guide
+          </button>
+        </div>
+      </header>
+
+      <section id="stappenplan" class="section">
+        <div class="section-header">
+          <h2 data-i18n="how_title">How does AI Folder Sync work?</h2>
+          <p data-i18n="how_subtitle">Link your local folder once and collaborate directly with your favorite AI assistant without manually copying or creating files.</p>
+        </div>
+
+        <div class="workflow-comparison">
+          <div class="workflow-box">
+            <h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                <line x1="12" y1="11" x2="12" y2="17"></line>
+                <line x1="9" y1="14" x2="15" y2="14"></line>
+              </svg>
+              <span data-i18n="wf1_title">Start a new or existing project</span>
+            </h3>
+            <ol class="step-timeline">
+              <li>
+                <span class="tl-num">1</span>
+                <div data-i18n-html="wf1_step1"><strong>Choose your project folder:</strong> In <em>Step 1</em>, select an existing or empty folder on your computer. All code and configuration files across any programming language are recognized and selected automatically.</div>
+              </li>
+              <li>
+                <span class="tl-num">2</span>
+                <div data-i18n-html="wf1_step2"><strong>Type your task &amp; copy:</strong> Choose your desired <em>AI Output Limit</em>, describe what you want to build in <em>Step 2</em>, click <strong>Full project + prompt</strong>, and paste it into your AI assistant.</div>
+              </li>
+              <li>
+                <span class="tl-num">3</span>
+                <div data-i18n-html="wf1_step3"><strong>1-Click build &amp; automatic backup:</strong> Copy the AI's JSON code block and click <strong>Read clipboard &amp; update folder</strong>. An automatic backup is saved first so you can always undo or switch versions.</div>
+              </li>
+            </ol>
+          </div>
+
+          <div class="workflow-box">
+            <h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 2v6h-6"></path>
+                <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+                <path d="M3 22v-6h6"></path>
+                <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+              </svg>
+              <span data-i18n="wf2_title">Ongoing chat, Sync &amp; Version History</span>
+            </h3>
+            <ol class="step-timeline">
+              <li>
+                <span class="tl-num">1</span>
+                <div data-i18n-html="wf2_step1"><strong>Automatic detection:</strong> When you edit, rename, move, add, or delete files or subfolders in VS Code or Explorer, AI Folder Sync detects it in the background and highlights the Sync button.</div>
+              </li>
+              <li>
+                <span class="tl-num">2</span>
+                <div data-i18n-html="wf2_step2"><strong>Smart Sync (grouped folder &amp; file diffs):</strong> Use <strong>Sync + prompt</strong> to send only your manual changes. Renamed or deleted subfolders are grouped as 1 change without resending unchanged code.</div>
+              </li>
+              <li>
+                <span class="tl-num">3</span>
+                <div data-i18n-html="wf2_step3"><strong>Version History &amp; Part-2 Recovery:</strong> Not happy with an AI update? Click <strong>Undo last update</strong> or pick any version in <strong>Version History</strong>. Cut-off JSON responses are also detected automatically.</div>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section id="functies" class="section">
+        <div class="section-header">
+          <h2 data-i18n="feat_title">Key Features</h2>
+          <p data-i18n="feat_subtitle">Designed for speed, clarity, and projects of any size or programming language.</p>
+        </div>
+
+        <div class="cards-3">
+          <div class="info-card">
+            <div class="info-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 2v6h-6"></path>
+                <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+                <path d="M3 22v-6h6"></path>
+                <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+              </svg>
+            </div>
+            <h3 data-i18n="feat1_title">Live Auto-Sync &amp; All Languages</h3>
+            <p data-i18n-html="feat1_desc">Supports all programming languages, scripts, and config files. Automatically detects file edits and folder/file renames or deletions in the background.</p>
+          </div>
+          <div class="info-card">
+            <div class="info-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <h3 data-i18n="feat2_title">Version History &amp; Floating Panel</h3>
+            <p data-i18n-html="feat2_desc">Every update is backed up automatically so you can undo with 1 click or switch between versions anytime—even from the compact <strong>floating panel</strong> on top of your AI chat.</p>
+          </div>
+          <div class="info-card">
+            <div class="info-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="4" y1="21" x2="4" y2="14"></line>
+                <line x1="4" y1="10" x2="4" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12" y2="3"></line>
+                <line x1="20" y1="21" x2="20" y2="16"></line>
+                <line x1="20" y1="12" x2="20" y2="3"></line>
+                <line x1="1" y1="14" x2="7" y2="14"></line>
+                <line x1="9" y1="8" x2="15" y2="8"></line>
+                <line x1="17" y1="16" x2="23" y2="16"></line>
+              </svg>
+            </div>
+            <h3 data-i18n-html="feat3_title">Configurable Output Limit &amp; Part-2 Recovery</h3>
+            <p data-i18n="feat3_desc">Choose how many lines of code the AI may generate per message (350, 700, 2,000, or unlimited) and recover cut-off JSON responses with 1 click.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="veiligheid" class="section">
+        <div class="section-header">
+          <h2 data-i18n="sec_title">100% Local &amp; Open-Source</h2>
+          <p data-i18n="sec_subtitle">Your source code and files never leave your device to any external server through this tool.</p>
+        </div>
+
+        <div class="security-banner">
+          <div>
+            <h3 class="sec-heading">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <span data-i18n="sec_box_title">Full privacy in your own browser</span>
+            </h3>
+            <p style="color:var(--text-muted); font-size:0.88rem; margin-top:6px;" data-i18n-html="sec_box_desc">
+              This tool runs completely <em>client-side</em> via the official <strong>W3C File System Access API</strong>.
+            </p>
+            <ul class="check-list">
+              <li>
+                <svg class="chk-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span data-i18n-html="sec_chk1"><strong>Works with every AI:</strong> Use ChatGPT, Claude, Gemini, DeepSeek, or local LLMs.</span>
+              </li>
+              <li>
+                <svg class="chk-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span data-i18n-html="sec_chk2"><strong>0 bytes to external servers:</strong> Everything is processed locally in your browser's memory.</span>
+              </li>
+              <li>
+                <svg class="chk-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span data-i18n-html="sec_chk3"><strong>Direct disk access:</strong> Files and subfolders are updated directly inside your linked folder.</span>
+              </li>
+            </ul>
+            <div style="margin-top: 18px;">
+              <button type="button" class="btn btn-primary btn-sm" data-switch-view="workspace">
+                <span data-i18n="hero_cta_open_tool">Open Tool / Workspace</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="code-preview">
+<pre id="codePreviewBlock">// Example of an AI JSON update:
+{
+  "folders": ["css", "js"],
+  "move": {
+    "old.css": "css/style.css"
+  },
+  "files": {
+    "js/new.js": "// Full code for a brand new file..."
+  },
+  "edit": {
+    "index.html": [
+      {
+        "search": "&lt;h1&gt;Old Title&lt;/h1&gt;",
+        "replace": "&lt;h1&gt;New Title&lt;/h1&gt;"
+      }
+    ]
+  },
+  "delete": ["old.txt"]
+}</pre>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- === FOOTER === -->
+  <footer class="lang-transition-target">
+    <div class="container">
+      <p data-i18n-html="footer_line1"><strong>AI Folder Sync</strong> — Universal Local Project Manager for Any AI Assistant.</p>
+      <p style="margin-top:4px;" data-i18n-html="footer_line2">View source code on <a href="https://github.com/ivannijdam08-web/ai-folder-sync" target="_blank" rel="noopener">GitHub</a>.</p>
+    </div>
+  </footer>
+
+  <!-- Application Scripts (Relative paths for GitHub Pages compatibility) -->
+  <script src="js/i18n.js" defer></script>
+  <script src="js/app.js" defer></script>
+</body>
+</html>
